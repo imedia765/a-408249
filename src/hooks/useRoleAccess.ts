@@ -22,18 +22,19 @@ export const useRoleAccess = () => {
 
       console.log('Session user in central role check:', session.user.id);
 
-      const { data: role, error } = await supabase.rpc('get_user_role', {
+      // First check members_roles table through RPC
+      const { data: role, error: rpcError } = await supabase.rpc('get_user_role', {
         user_auth_id: session.user.id
       });
 
-      if (error) {
-        console.error('Error fetching role in central hook:', error);
+      if (rpcError) {
+        console.error('Error fetching role in central hook:', rpcError);
         toast({
           title: "Error fetching role",
-          description: error.message,
+          description: rpcError.message,
           variant: "destructive",
         });
-        throw error;
+        throw rpcError;
       }
 
       console.log('Fetched role from central hook:', role);
@@ -41,6 +42,9 @@ export const useRoleAccess = () => {
     },
     staleTime: ROLE_STALE_TIME,
     retry: 2,
+    meta: {
+      errorMessage: "Failed to fetch user role"
+    }
   });
 
   const canAccessTab = (tab: string): boolean => {
