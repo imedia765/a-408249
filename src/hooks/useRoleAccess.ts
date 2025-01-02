@@ -14,6 +14,8 @@ export const useRoleAccess = () => {
         return null;
       }
 
+      console.log('Session user:', session.user.id);
+
       const { data: role, error } = await supabase.rpc('get_user_role', {
         user_auth_id: session.user.id
       });
@@ -23,9 +25,11 @@ export const useRoleAccess = () => {
         throw error;
       }
 
-      console.log('User role:', role);
+      console.log('Fetched role:', role);
       return role as UserRole;
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 2,
   });
 
   const canAccessTab = (tab: string): boolean => {

@@ -43,7 +43,8 @@ const MemberProfileCard = ({ memberProfile }: MemberProfileCardProps) => {
       return data;
     },
     enabled: !!memberProfile?.auth_user_id,
-    retry: 1,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 2,
   });
 
   if (!memberProfile) {
