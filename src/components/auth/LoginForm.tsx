@@ -18,9 +18,10 @@ const LoginForm = () => {
     try {
       console.log('Starting login process for member:', memberNumber);
       
+      // First, verify member exists
       const { data: members, error: memberError } = await supabase
         .from('members')
-        .select('*')
+        .select('id, member_number')
         .eq('member_number', memberNumber)
         .limit(1);
 
@@ -42,45 +43,46 @@ const LoginForm = () => {
 
       console.log('Attempting sign in with:', { email });
       
+      // Try to sign in
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (signInError) {
-        console.error('Sign in error:', signInError);
+      // If sign in fails due to invalid credentials, try to sign up
+      if (signInError && signInError.message === 'Invalid login credentials') {
+        console.log('Attempting signup for new user');
         
-        if (signInError.message === 'Invalid login credentials') {
-          console.log('Attempting signup for new user');
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                member_number: memberNumber,
-              }
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              member_number: memberNumber,
             }
-          });
-
-          if (signUpError) {
-            console.error('Signup error:', signUpError);
-            throw signUpError;
           }
+        });
 
-          if (signUpData.user) {
-            const { error: updateError } = await supabase
-              .from('members')
-              .update({ auth_user_id: signUpData.user.id })
-              .eq('member_number', memberNumber);
+        if (signUpError) {
+          console.error('Signup error:', signUpError);
+          throw signUpError;
+        }
 
-            if (updateError) {
-              console.error('Error updating member with auth_user_id:', updateError);
-              throw updateError;
-            }
+        if (signUpData.user) {
+          // Update member with auth_user_id
+          const { error: updateError } = await supabase
+            .from('members')
+            .update({ auth_user_id: signUpData.user.id })
+            .eq('id', member.id);
+
+          if (updateError) {
+            console.error('Error updating member with auth_user_id:', updateError);
+            throw updateError;
           }
 
           console.log('Signup successful, attempting final sign in');
           
+          // Final sign in attempt after successful signup
           const { error: finalSignInError } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -90,9 +92,9 @@ const LoginForm = () => {
             console.error('Final sign in error:', finalSignInError);
             throw finalSignInError;
           }
-        } else {
-          throw signInError;
         }
+      } else if (signInError) {
+        throw signInError;
       }
 
       toast({
