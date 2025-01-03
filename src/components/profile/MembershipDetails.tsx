@@ -10,10 +10,13 @@ interface MembershipDetailsProps {
   userRole: string | null;
 }
 
+// Define the allowed role types to match the database enum
+type AppRole = 'admin' | 'collector' | 'member';
+
 const MembershipDetails = ({ memberProfile, userRole }: MembershipDetailsProps) => {
   const { toast } = useToast();
 
-  const handleRoleChange = async (newRole: string) => {
+  const handleRoleChange = async (newRole: AppRole) => {
     if (!memberProfile.auth_user_id) {
       toast({
         title: "Error",
@@ -32,12 +35,13 @@ const MembershipDetails = ({ memberProfile, userRole }: MembershipDetailsProps) 
 
       if (deleteError) throw deleteError;
 
-      // Then insert new role
+      // Then insert new role with proper typing
       const { error: insertError } = await supabase
         .from('user_roles')
-        .insert([
-          { user_id: memberProfile.auth_user_id, role: newRole }
-        ]);
+        .insert({
+          user_id: memberProfile.auth_user_id,
+          role: newRole
+        });
 
       if (insertError) throw insertError;
 
