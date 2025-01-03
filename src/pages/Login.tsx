@@ -19,21 +19,23 @@ const Login = () => {
       console.log('Starting login process for member:', memberNumber);
       
       // First, check if the member exists in our database
-      const { data: member, error: memberError } = await supabase.rpc(
-        'authenticate_member',
-        { p_member_number: memberNumber }
-      );
+      const { data: members, error: memberError } = await supabase
+        .from('members')
+        .select('*')
+        .eq('member_number', memberNumber)
+        .limit(1);
 
       if (memberError) {
         console.error('Member verification error:', memberError);
         throw memberError;
       }
 
-      if (!member || member.length === 0) {
+      if (!members || members.length === 0) {
         console.error('Member not found');
         throw new Error('Member not found');
       }
 
+      const member = members[0];
       console.log('Member found:', member);
 
       // Create the email format we'll use
