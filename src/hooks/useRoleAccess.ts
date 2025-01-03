@@ -31,6 +31,10 @@ export const useRoleAccess = () => {
 
       if (roleError) {
         console.error('Error fetching role in central hook:', roleError);
+        // If no role is found, default to 'member'
+        if (roleError.code === 'PGRST116') {
+          return 'member' as UserRole;
+        }
         toast({
           title: "Error fetching role",
           description: roleError.message,

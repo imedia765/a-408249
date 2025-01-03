@@ -71,6 +71,19 @@ const Login = () => {
             throw signUpError;
           }
 
+          // Update the member record with the new auth_user_id
+          if (signUpData.user) {
+            const { error: updateError } = await supabase
+              .from('members')
+              .update({ auth_user_id: signUpData.user.id })
+              .eq('member_number', memberNumber);
+
+            if (updateError) {
+              console.error('Error updating member with auth_user_id:', updateError);
+              throw updateError;
+            }
+          }
+
           console.log('Signup successful, attempting final sign in');
           
           // After successful signup, try signing in again
