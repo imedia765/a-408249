@@ -27,14 +27,10 @@ export const useRoleAccess = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (roleError) {
+      if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error fetching role in central hook:', roleError);
-        // If no role is found, default to 'member'
-        if (roleError.code === 'PGRST116') {
-          return 'member' as UserRole;
-        }
         toast({
           title: "Error fetching role",
           description: roleError.message,
@@ -43,7 +39,8 @@ export const useRoleAccess = () => {
         throw roleError;
       }
 
-      console.log('Fetched role from central hook:', roleData?.role);
+      // If no role is found or PGRST116 error, default to 'member'
+      console.log('Fetched role from central hook:', roleData?.role || 'member');
       return (roleData?.role as UserRole) || 'member';
     },
     staleTime: ROLE_STALE_TIME,
