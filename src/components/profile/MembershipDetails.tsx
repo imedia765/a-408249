@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
 
 interface MembershipDetailsProps {
   memberProfile: Member;
@@ -15,6 +16,31 @@ type AppRole = 'admin' | 'collector' | 'member';
 
 const MembershipDetails = ({ memberProfile, userRole }: MembershipDetailsProps) => {
   const { toast } = useToast();
+
+  // Fetch the actual role from user_roles table
+  const { data: actualRole } = useQuery({
+    queryKey: ['actualUserRole', memberProfile.auth_user_id],
+    queryFn: async () => {
+      if (!memberProfile.auth_user_id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', memberProfile.auth_user_id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching actual role:', error);
+        return null;
+      }
+
+      return data?.role || null;
+    },
+    enabled: !!memberProfile.auth_user_id
+  });
+
+  // Use the actual role from the database if available, otherwise fall back to the passed userRole
+  const displayRole = actualRole || userRole;
 
   const handleRoleChange = async (newRole: AppRole) => {
     if (!memberProfile.auth_user_id) {
@@ -77,7 +103,7 @@ const MembershipDetails = ({ memberProfile, userRole }: MembershipDetailsProps) 
           <span className="text-dashboard-accent2">Type:</span>
           <span className="flex items-center gap-2">
             {memberProfile?.membership_type || 'Standard'}
-            {userRole === 'admin' ? (
+            {displayRole === 'admin' ? (
               <div className="ml-2">
                 <Select onValueChange={handleRoleChange}>
                   <SelectTrigger className="w-[140px] h-8 bg-dashboard-accent1/10 border-dashboard-accent1/20">
@@ -106,7 +132,7 @@ const MembershipDetails = ({ memberProfile, userRole }: MembershipDetailsProps) 
                 </Select>
               </div>
             ) : (
-              <RoleBadge role={userRole} />
+              <RoleBadge role={displayRole} />
             )}
           </span>
         </p>
