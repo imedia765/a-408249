@@ -21,6 +21,7 @@ export const useRoleAccess = () => {
       }
 
       console.log('Session user in central role check:', session.user.id);
+      console.log('User metadata:', session.user.user_metadata);
 
       // First try to get role from user_roles table
       const { data: roleData, error: roleError } = await supabase
@@ -31,17 +32,19 @@ export const useRoleAccess = () => {
 
       if (roleError) {
         console.error('Error fetching role in central hook:', roleError);
-        toast({
-          title: "Error fetching role",
-          description: roleError.message,
-          variant: "destructive",
-        });
-        throw roleError;
+        // Don't throw error, try fallback methods
       }
 
       if (roleData?.role) {
         console.log('Fetched role from central hook:', roleData.role);
         return roleData.role as UserRole;
+      }
+
+      // Check JWT token metadata for role
+      const metadataRole = session.user.user_metadata?.role;
+      if (metadataRole && ['admin', 'collector', 'member'].includes(metadataRole)) {
+        console.log('Using role from JWT metadata:', metadataRole);
+        return metadataRole as UserRole;
       }
 
       // If no role found, check if user is a collector
