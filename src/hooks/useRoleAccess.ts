@@ -22,21 +22,29 @@ export const useRoleAccess = () => {
 
       console.log('Session user in central role check:', session.user.id);
 
-      // Check user_roles table directly
+      // Check user_roles table directly with detailed error logging
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .maybeSingle();
 
-      if (roleError && roleError.code !== 'PGRST116') {
+      if (roleError) {
         console.error('Error fetching role in central hook:', roleError);
-        toast({
-          title: "Error fetching role",
-          description: roleError.message,
-          variant: "destructive",
+        console.error('Error details:', {
+          code: roleError.code,
+          message: roleError.message,
+          details: roleError.details
         });
-        throw roleError;
+        
+        if (roleError.code !== 'PGRST116') {
+          toast({
+            title: "Error fetching role",
+            description: roleError.message,
+            variant: "destructive",
+          });
+          throw roleError;
+        }
       }
 
       // If no role is found or PGRST116 error, default to 'member'

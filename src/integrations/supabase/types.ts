@@ -258,6 +258,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      is_admin: {
+        Args: {
+          user_uid: string
+        }
+        Returns: boolean
+      }
       restore_from_backup: {
         Args: {
           backup_data: Json
