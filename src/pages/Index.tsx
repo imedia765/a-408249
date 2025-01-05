@@ -9,27 +9,31 @@ import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const { canAccessTab, userRole } = useRoleAccess();
-  const [isLoading, setIsLoading] = useState(true);
+  const { canAccessTab, userRole, roleLoading } = useRoleAccess();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log('No session found, redirecting to login');
           navigate('/login');
+        } else {
+          console.log('Session found:', session.user.id);
         }
       } catch (error) {
         console.error('Session check error:', error);
         navigate('/login');
       } finally {
-        setIsLoading(false);
+        setIsAuthChecking(false);
       }
     };
 
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
       if (event === 'SIGNED_OUT' || !session) {
         navigate('/login');
       }
@@ -44,10 +48,13 @@ const Index = () => {
     navigate('/login');
   };
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      Loading...
-    </div>;
+  // Show loading state while either auth or role is being checked
+  if (isAuthChecking || roleLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-dashboard-dark">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   return (
