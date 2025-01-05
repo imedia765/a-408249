@@ -6,7 +6,7 @@ import CommitteeUpdate from '@/components/auth/CommitteeUpdate';
 import MembershipExpectations from '@/components/auth/MembershipExpectations';
 import ImportantInformation from '@/components/auth/ImportantInformation';
 import MedicalExaminer from '@/components/auth/MedicalExaminer';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -42,11 +42,6 @@ const Login = () => {
       
       if (event === 'SIGNED_IN' && session?.user) {
         navigate('/');
-      } else if (event === 'SIGNED_OUT') {
-        // Don't navigate on sign out since we're already on login page
-        console.log('User signed out');
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed successfully');
       }
     });
 
