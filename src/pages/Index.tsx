@@ -5,6 +5,27 @@ import MembersList from '@/components/MembersList';
 import CollectorsList from '@/components/CollectorsList';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, ShieldOff } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const UnauthorizedMessage = () => (
+  <Alert variant="destructive">
+    <ShieldOff className="h-4 w-4" />
+    <AlertTitle>Unauthorized Access</AlertTitle>
+    <AlertDescription>
+      You don't have permission to view this page.
+    </AlertDescription>
+  </Alert>
+);
+
+const LoadingState = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-12 w-full" />
+    <Skeleton className="h-32 w-full" />
+    <Skeleton className="h-32 w-full" />
+  </div>
+);
 
 const Index = () => {
   const navigate = useNavigate();
@@ -54,45 +75,36 @@ const Index = () => {
     };
   }, [navigate]);
 
-  const handleLogout = () => {
-    navigate('/login');
-  };
-
   // Show loading state while either auth or role is being checked
   if (isAuthChecking || roleLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-dashboard-dark">
-        <div className="text-white">Loading...</div>
+      <div className="container mx-auto px-4 py-8">
+        <LoadingState />
       </div>
     );
   }
+
+  const renderProtectedRoute = (path: string, Component: React.ComponentType<any>, props: any = {}) => {
+    if (!canAccessTab(path)) {
+      return <UnauthorizedMessage />;
+    }
+    return <Component {...props} />;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Routes>
         <Route 
           path="/" 
-          element={
-            canAccessTab('dashboard') 
-              ? <DashboardView onLogout={handleLogout} /> 
-              : null
-          } 
+          element={renderProtectedRoute('dashboard', DashboardView, { onLogout: () => navigate('/login') })} 
         />
         <Route 
           path="/members" 
-          element={
-            canAccessTab('users') 
-              ? <MembersList searchTerm={searchTerm} userRole={userRole} /> 
-              : null
-          } 
+          element={renderProtectedRoute('users', MembersList, { searchTerm, userRole })} 
         />
         <Route 
           path="/collectors" 
-          element={
-            canAccessTab('users') 
-              ? <CollectorsList /> 
-              : null
-          } 
+          element={renderProtectedRoute('collectors', CollectorsList)} 
         />
       </Routes>
     </div>
