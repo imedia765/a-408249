@@ -1,47 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useRoleAccess } from '@/hooks/useRoleAccess';
-import SidePanel from '@/components/SidePanel';
+import { Routes, Route } from 'react-router-dom';
 import DashboardView from '@/components/DashboardView';
 import MembersList from '@/components/MembersList';
 import CollectorsList from '@/components/CollectorsList';
-import MemberAnalyzer from '@/components/settings/MemberAnalyzer';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [searchTerm, setSearchTerm] = useState('');
-  const { userRole, roleLoading } = useRoleAccess();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    navigate('/login');
-  };
-
-  const renderContent = () => {
-    if (roleLoading) {
-      return <div>Loading...</div>;
-    }
-
-    switch (activeTab) {
-      case 'dashboard':
-        return <DashboardView onLogout={handleLogout} />;
-      case 'users':
-        return <MembersList searchTerm={searchTerm} userRole={userRole} />;
-      case 'collectors':
-        return <CollectorsList />;
-      case 'settings':
-        return <MemberAnalyzer />;
-      default:
-        return <DashboardView onLogout={handleLogout} />;
-    }
-  };
+  const { canAccessTab } = useRoleAccess();
 
   return (
-    <div className="flex min-h-screen bg-dashboard-background text-dashboard-text">
-      <SidePanel onTabChange={setActiveTab} userRole={userRole} />
-      <main className="flex-1 ml-64 p-8">
-        {renderContent()}
-      </main>
+    <div className="container mx-auto px-4 py-8">
+      <Routes>
+        <Route path="/" element={canAccessTab('dashboard') ? <DashboardView /> : null} />
+        <Route path="/members" element={canAccessTab('users') ? <MembersList /> : null} />
+        <Route path="/collectors" element={canAccessTab('users') ? <CollectorsList /> : null} />
+      </Routes>
     </div>
   );
 };
