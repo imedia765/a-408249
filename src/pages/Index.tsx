@@ -13,9 +13,14 @@ const Index = () => {
   const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
         if (!session) {
           console.log('No session found, redirecting to login');
           navigate('/login');
@@ -24,9 +29,13 @@ const Index = () => {
         }
       } catch (error) {
         console.error('Session check error:', error);
-        navigate('/login');
+        if (mounted) {
+          navigate('/login');
+        }
       } finally {
-        setIsAuthChecking(false);
+        if (mounted) {
+          setIsAuthChecking(false);
+        }
       }
     };
 
@@ -40,6 +49,7 @@ const Index = () => {
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate]);
@@ -51,7 +61,7 @@ const Index = () => {
   // Show loading state while either auth or role is being checked
   if (isAuthChecking || roleLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-dashboard-dark">
+      <div className="fixed inset-0 flex items-center justify-center bg-dashboard-dark">
         <div className="text-white">Loading...</div>
       </div>
     );
