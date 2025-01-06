@@ -1,15 +1,25 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
-import Login from './pages/Login';
-import Index from './pages/Index';
-import { Routes, Route } from 'react-router-dom';
+import { useAuthSession } from "@/hooks/useAuthSession";
+import ProtectedRoutes from "@/components/routing/ProtectedRoutes";
 
 function App() {
+  const { session, loading } = useAuthSession();
+
+  // Only show loading state if we're actually checking an existing session
+  if (loading && session !== null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/*" element={<Index />} />
-    </Routes>
+    <>
+      <ProtectedRoutes session={session} />
+      <Toaster />
+    </>
   );
 }
 

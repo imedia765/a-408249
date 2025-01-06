@@ -1,113 +1,146 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
 import DashboardView from '@/components/DashboardView';
 import MembersList from '@/components/MembersList';
-import CollectorsList from '@/components/CollectorsList';
+import MemberSearch from '@/components/MemberSearch';
+import AuditLogsView from '@/components/AuditLogsView';
+import SystemToolsView from '@/components/SystemToolsView';
+import CollectorFinancialsView from '@/components/CollectorFinancialsView';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, ShieldOff } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-const UnauthorizedMessage = () => (
-  <Alert variant="destructive">
-    <ShieldOff className="h-4 w-4" />
-    <AlertTitle>Unauthorized Access</AlertTitle>
-    <AlertDescription>
-      You don't have permission to view this page.
-    </AlertDescription>
-  </Alert>
-);
-
-const LoadingState = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-12 w-full" />
-    <Skeleton className="h-32 w-full" />
-    <Skeleton className="h-32 w-full" />
-  </div>
-);
+import { useToast } from "@/hooks/use-toast";
+import MainLayout from '@/components/layout/MainLayout';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-  const { canAccessTab, userRole, roleLoading } = useRoleAccess();
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { userRole, roleLoading, canAccessTab } = useRoleAccess();
+  const queryClient = useQueryClient();
+
+  const handleSessionError = async () => {
+    console.log('Session error detected, cleaning up...');
+    
+    try {
+      await queryClient.invalidateQueries();
+      await queryClient.resetQueries();
+      localStorage.clear();
+      await supabase.auth.signOut();
+      
+      toast({
+        title: "Session expired",
+        description: "Please sign in again",
+      });
+      
+      navigate('/login');
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      window.location.href = '/login';
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-
-    const checkSession = async () => {
+    const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Checking authentication status...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (error) {
+          console.error('Auth check error:', error);
+          await handleSessionError();
+          return;
+        }
 
         if (!session) {
-          console.log('No session found, redirecting to login');
-          navigate('/login');
-        } else {
-          console.log('Session found:', session.user.id);
+          console.log('No active session found');
+          await handleSessionError();
+          return;
         }
-      } catch (error) {
-        console.error('Session check error:', error);
-        if (mounted) {
-          navigate('/login');
+
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          console.error('User verification failed:', userError);
+          await handleSessionError();
+          return;
         }
-      } finally {
-        if (mounted) {
-          setIsAuthChecking(false);
-        }
+
+        console.log('Active session found for user:', session.user.id);
+      } catch (error: any) {
+        console.error('Authentication check failed:', error);
+        await handleSessionError();
       }
     };
 
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        navigate('/login');
+        await handleSessionError();
       }
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
-  // Show loading state while either auth or role is being checked
-  if (isAuthChecking || roleLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <LoadingState />
-      </div>
-    );
-  }
-
-  const renderProtectedRoute = (path: string, Component: React.ComponentType<any>, props: any = {}) => {
-    if (!canAccessTab(path)) {
-      return <UnauthorizedMessage />;
+  useEffect(() => {
+    if (!roleLoading && !canAccessTab(activeTab)) {
+      setActiveTab('dashboard');
+      toast({
+        title: "Access Restricted",
+        description: "You don't have permission to access this section.",
+        variant: "destructive",
+      });
     }
-    return <Component {...props} />;
+  }, [activeTab, roleLoading, userRole]);
+
+  const renderContent = () => {
+    if (!canAccessTab(activeTab)) {
+      return <DashboardView />;
+    }
+
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'users':
+        return (
+          <>
+            <header className="mb-8">
+              <h1 className="text-3xl font-medium mb-2 text-white">Members</h1>
+              <p className="text-dashboard-muted">View and manage member information</p>
+            </header>
+            <MemberSearch 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
+            <MembersList searchTerm={searchTerm} userRole={userRole} />
+          </>
+        );
+      case 'financials':
+        return <CollectorFinancialsView />;
+      case 'audit':
+        return <AuditLogsView />;
+      case 'system':
+        return <SystemToolsView />;
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Routes>
-        <Route 
-          path="/" 
-          element={renderProtectedRoute('dashboard', DashboardView, { onLogout: () => navigate('/login') })} 
-        />
-        <Route 
-          path="/members" 
-          element={renderProtectedRoute('users', MembersList, { searchTerm, userRole })} 
-        />
-        <Route 
-          path="/collectors" 
-          element={renderProtectedRoute('collectors', CollectorsList)} 
-        />
-      </Routes>
-    </div>
+    <MainLayout
+      activeTab={activeTab}
+      userRole={userRole}
+      isSidebarOpen={isSidebarOpen}
+      onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      onTabChange={setActiveTab}
+    >
+      {renderContent()}
+    </MainLayout>
   );
 };
 
