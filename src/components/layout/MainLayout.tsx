@@ -24,7 +24,7 @@ const MainLayout = ({
     <div className="min-h-screen bg-dashboard-dark">
       <MainHeader onToggleSidebar={onSidebarToggle} />
       
-      <div className="flex min-h-[calc(100vh-4rem)] pt-16">
+      <div className="flex min-h-[calc(100vh-4rem)] pt-24">
         {/* Overlay for mobile */}
         {isSidebarOpen && (
           <div 
@@ -36,7 +36,7 @@ const MainLayout = ({
         {/* Sidebar */}
         <aside 
           className={`
-            fixed lg:static w-64 h-[calc(100vh-4rem)] top-16 
+            fixed lg:sticky top-24 h-[calc(100vh-6rem)] w-64
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             transition-transform duration-300 ease-in-out z-50
           `}
