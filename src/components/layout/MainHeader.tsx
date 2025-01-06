@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MainHeaderProps {
@@ -7,22 +7,26 @@ interface MainHeaderProps {
 
 const MainHeader = ({ onToggleSidebar }: MainHeaderProps) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-dashboard-card/50 backdrop-blur-sm py-4 px-6 border-b border-white/10">
-      <div className="flex items-center justify-between lg:justify-center max-w-screen-2xl mx-auto">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-dashboard-card/80 backdrop-blur-md border-b border-white/10">
+      <div className="flex items-center justify-between h-16 px-4 lg:px-8 max-w-screen-2xl mx-auto">
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="lg:hidden bg-dashboard-card/50 border-white/10"
+          className="lg:hidden text-dashboard-text hover:bg-white/5"
         >
-          <Menu className="h-4 w-4" />
+          <Menu className="h-5 w-5" />
         </Button>
+        
+        <div className="flex items-center justify-center flex-1 lg:justify-start">
+          <h1 className="text-lg font-semibold text-white">
+            <span className="hidden sm:inline">Anjuman-e-Saifee</span>
+            <span className="sm:hidden">AES</span>
+          </h1>
+        </div>
 
-        <div className="text-center">
-          <p className="text-xl text-white font-arabic">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-          <p className="text-sm text-dashboard-accent1 mt-1">
-            In the name of Allah, the Most Gracious, the Most Merciful
-          </p>
+        <div className="w-10 lg:hidden">
+          {/* Placeholder div to maintain center alignment */}
         </div>
       </div>
     </header>
