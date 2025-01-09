@@ -16,7 +16,7 @@ interface PaymentDialogProps {
   memberId: string;
   memberNumber: string;
   memberName: string;
-  collectorInfo: { name: string | null } | null;
+  collectorInfo: { name: string | null; phone: string | null } | null;
 }
 
 const PaymentDialog = ({ 
@@ -32,7 +32,7 @@ const PaymentDialog = ({
   const queryClient = useQueryClient();
   const [selectedPaymentType, setSelectedPaymentType] = useState<string>('yearly');
   const [paymentAmount, setPaymentAmount] = useState<string>('40');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer'>('bank_transfer');
 
   const handlePaymentTypeChange = (value: string) => {
     setSelectedPaymentType(value);
