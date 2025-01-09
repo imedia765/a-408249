@@ -7,9 +7,12 @@ import AddressDetails from "./profile/AddressDetails";
 import MembershipDetails from "./profile/MembershipDetails";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, CreditCard } from "lucide-react";
 import EditProfileDialog from "./members/EditProfileDialog";
+import PaymentDialog from "./members/PaymentDialog";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MemberProfileCardProps {
   memberProfile: Member | null;
@@ -18,6 +21,25 @@ interface MemberProfileCardProps {
 const MemberProfileCard = ({ memberProfile }: MemberProfileCardProps) => {
   const { userRole } = useRoleAccess();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
+  // Query to get collector info
+  const { data: collectorInfo } = useQuery({
+    queryKey: ['collectorInfo', memberProfile?.collector],
+    queryFn: async () => {
+      if (!memberProfile?.collector) return null;
+      
+      const { data, error } = await supabase
+        .from('members_collectors')
+        .select('name')
+        .eq('name', memberProfile.collector)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!memberProfile?.collector
+  });
 
   if (!memberProfile) {
     return (
@@ -50,16 +72,27 @@ const MemberProfileCard = ({ memberProfile }: MemberProfileCardProps) => {
                 <ContactInfo memberProfile={memberProfile} />
                 <AddressDetails memberProfile={memberProfile} />
                 
-                {/* Modified condition to show edit button */}
-                {(userRole === 'collector' || userRole === 'admin' || userRole === 'member') && (
-                  <Button
-                    onClick={() => setShowEditDialog(true)}
-                    className="w-full bg-dashboard-accent2 hover:bg-dashboard-accent2/80 text-white transition-colors"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                )}
+                <div className="flex flex-col gap-2">
+                  {(userRole === 'collector' || userRole === 'admin' || userRole === 'member') && (
+                    <Button
+                      onClick={() => setShowEditDialog(true)}
+                      className="w-full bg-dashboard-accent2 hover:bg-dashboard-accent2/80 text-white transition-colors"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  )}
+                  
+                  {userRole === 'collector' && (
+                    <Button
+                      onClick={() => setShowPaymentDialog(true)}
+                      className="w-full bg-dashboard-accent1 hover:bg-dashboard-accent1/80 text-white transition-colors"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Make Payment
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -79,6 +112,17 @@ const MemberProfileCard = ({ memberProfile }: MemberProfileCardProps) => {
         onOpenChange={setShowEditDialog}
         onProfileUpdated={handleProfileUpdated}
       />
+
+      {showPaymentDialog && (
+        <PaymentDialog
+          isOpen={showPaymentDialog}
+          onClose={() => setShowPaymentDialog(false)}
+          memberId={memberProfile.id}
+          memberNumber={memberProfile.member_number}
+          memberName={memberProfile.full_name}
+          collectorInfo={collectorInfo}
+        />
+      )}
     </Card>
   );
 };
