@@ -43,7 +43,7 @@ const PaymentCard = ({
           <h3 className="text-xl font-semibold text-dashboard-highlight mb-4">Annual Payment</h3>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-3xl font-bold text-dashboard-accent1">£40</p>
+              <p className="text-3xl font-bold text-dashboard-accent2">£40</p>
               <PaymentDueDate 
                 dueDate={annualPaymentDueDate} 
                 color="text-dashboard-highlight"
