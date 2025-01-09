@@ -16,7 +16,7 @@ interface PaymentDialogProps {
   memberId: string;
   memberNumber: string;
   memberName: string;
-  collectorInfo: { name: string | null; phone: string | null } | null;
+  collectorInfo: { name: string | null } | null;
 }
 
 const PaymentDialog = ({ 
@@ -129,18 +129,6 @@ const PaymentDialog = ({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
-          {collectorInfo && (
-            <div className="p-4 rounded-lg bg-dashboard-card border border-dashboard-accent2/20">
-              <p className="text-dashboard-accent2 font-medium mb-2">Your Collector:</p>
-              <p className="text-dashboard-accent2">{collectorInfo.name}</p>
-              {collectorInfo.phone && (
-                <p className="text-dashboard-accent2 text-sm mt-1">
-                  Contact: {collectorInfo.phone}
-                </p>
-              )}
-            </div>
-          )}
-          
           <PaymentTypeSelector
             selectedPaymentType={selectedPaymentType}
             onPaymentTypeChange={handlePaymentTypeChange}
