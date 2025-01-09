@@ -10,8 +10,7 @@ import {
   LogOut
 } from "lucide-react";
 import { UserRole } from "@/hooks/useRoleAccess";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface SidePanelProps {
   onTabChange: (tab: string) => void;
@@ -21,11 +20,10 @@ interface SidePanelProps {
 const SidePanel = ({ onTabChange, userRole }: SidePanelProps) => {
   const isAdmin = userRole === 'admin';
   const isCollector = userRole === 'collector';
-  const navigate = useNavigate();
+  const { handleSignOut } = useAuthSession();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+  const handleLogoutClick = () => {
+    handleSignOut(false);
   };
 
   return (
@@ -98,7 +96,7 @@ const SidePanel = ({ onTabChange, userRole }: SidePanelProps) => {
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-sm text-dashboard-muted hover:text-white"
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
         >
           <LogOut className="h-4 w-4" />
           Logout
