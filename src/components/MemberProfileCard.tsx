@@ -83,7 +83,7 @@ const MemberProfileCard = ({ memberProfile }: MemberProfileCardProps) => {
                     </Button>
                   )}
                   
-                  {userRole === 'collector' && (
+                  {(userRole === 'collector' || userRole === 'member') && (
                     <Button
                       onClick={() => setShowPaymentDialog(true)}
                       className="w-full bg-dashboard-accent1 hover:bg-dashboard-accent1/80 text-white transition-colors"
