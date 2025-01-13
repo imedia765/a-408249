@@ -23,8 +23,8 @@ const BankDetails = ({ memberNumber }: BankDetailsProps) => {
         </div>
         <div>
           <p className="text-dashboard-muted">Reference</p>
-          <p className="text-dashboard-text font-medium">
-            {memberNumber ? `UKIM-${memberNumber}` : 'UKIM-[Your Member Number]'}
+          <p className="text-dashboard-text font-medium text-blue-500">
+            {memberNumber || '[Your Member Number]'}
           </p>
         </div>
       </div>
