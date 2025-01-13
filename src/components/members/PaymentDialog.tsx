@@ -1,10 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaymentMethodSelector from "./payment/PaymentMethodSelector";
 import PaymentTypeSelector from "./payment/PaymentTypeSelector";
 import BankDetails from "./payment/BankDetails";
 import { useState } from "react";
-import { CollectorInfo } from "@/types/collector";
+import { Collector } from "@/types/collector";
 
 interface PaymentDialogProps {
   isOpen: boolean;
@@ -12,7 +11,7 @@ interface PaymentDialogProps {
   memberId: string;
   memberNumber: string;
   memberName: string;
-  collectorInfo: CollectorInfo | null;
+  collectorInfo: Collector | null;
 }
 
 const PaymentDialog = ({ 
@@ -24,7 +23,7 @@ const PaymentDialog = ({
   collectorInfo 
 }: PaymentDialogProps) => {
   const [selectedPaymentType, setSelectedPaymentType] = useState<string>('yearly');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('bank_transfer');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'bank_transfer'>('bank_transfer');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -37,13 +36,13 @@ const PaymentDialog = ({
 
         <div className="space-y-6">
           <PaymentTypeSelector
-            selectedType={selectedPaymentType}
-            onTypeChange={setSelectedPaymentType}
+            selectedPaymentType={selectedPaymentType}
+            onPaymentTypeChange={setSelectedPaymentType}
           />
 
           <PaymentMethodSelector
-            selectedMethod={selectedPaymentMethod}
-            onMethodChange={setSelectedPaymentMethod}
+            paymentMethod={selectedPaymentMethod}
+            onPaymentMethodChange={setSelectedPaymentMethod}
           />
 
           {selectedPaymentMethod === 'bank_transfer' && (
