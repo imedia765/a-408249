@@ -67,13 +67,18 @@ const ChangePasswordDialog = ({
         user_agent: navigator.userAgent,
         client_info: JSON.stringify({
           platform: navigator.platform,
-          language: navigator.language
+          language: navigator.language,
+          timestamp: new Date().toISOString()
         })
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Password change error:", error);
+        throw error;
+      }
 
       toast.success("Password changed successfully");
+      form.reset();
       onOpenChange(false);
       
       if (isFirstTimeLogin) {
