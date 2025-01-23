@@ -56,9 +56,9 @@ const ChangePasswordDialog = ({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("Starting password change for member:", memberNumber);
     try {
       setIsSubmitting(true);
-      console.log("Changing password for member:", memberNumber);
 
       const { error } = await supabase.rpc('handle_password_reset', {
         member_number: memberNumber,
@@ -74,19 +74,23 @@ const ChangePasswordDialog = ({
 
       if (error) {
         console.error("Password change error:", error);
-        throw error;
+        toast.error(error.message || "Failed to change password");
+        return;
       }
 
+      console.log("Password changed successfully for member:", memberNumber);
       toast.success("Password changed successfully");
       form.reset();
-      onOpenChange(false);
       
-      if (isFirstTimeLogin) {
+      if (!isFirstTimeLogin) {
+        onOpenChange(false);
+      } else {
         window.location.reload();
       }
+
     } catch (error: any) {
-      console.error("Error changing password:", error);
-      toast.error(error.message || "Failed to change password");
+      console.error("Error in password change:", error);
+      toast.error(error.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,6 +177,7 @@ const ChangePasswordDialog = ({
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
                   className="bg-dashboard-dark hover:bg-dashboard-cardHover hover:text-white border-dashboard-cardBorder transition-all duration-200"
                 >
                   Cancel
