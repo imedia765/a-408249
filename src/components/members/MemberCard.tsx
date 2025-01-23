@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from 'lucide-react';
+import PasswordManagementSection from './password/PasswordManagementSection';
 
 interface MemberCardProps {
   member: Member;
@@ -215,6 +216,18 @@ const MemberCard = ({ member, userRole, onEditClick, onDeleteClick }: MemberCard
               </div>
               <NotesList memberId={member.id} />
             </div>
+          )}
+
+          {/* Add Password Management Section for admins */}
+          {userRole === 'admin' && (
+            <PasswordManagementSection
+              memberId={member.id}
+              memberNumber={member.member_number}
+              passwordSetAt={member.password_set_at ? new Date(member.password_set_at) : null}
+              failedLoginAttempts={member.failed_login_attempts || 0}
+              lockedUntil={member.locked_until ? new Date(member.locked_until) : null}
+              passwordResetRequired={member.password_reset_required || false}
+            />
           )}
 
           <PaymentDialog
